@@ -3,41 +3,84 @@
 class Horses3DControl:
     def __init__(self, filepath=None):
         self.parameters = {}
-        self.blocks = {}
+        self.boundaries = {}
+        self.monitors = {}
         self.controlFilePath = filepath
 
         if filepath:
             self.loadControlFile()
         else:
-            self.create_default()
+            self.createDefaultControl()
 
     def loadControlFile(self):
         filepath = self.controlFilePath
         with open(filepath, 'r') as file:
-            current_block = None
+            current_boundary = None
+            current_monitor = None
             for line in file:
                 line = line.strip()
+
                 if line.startswith('#define boundary'):
-                    current_block = line.split(' ')[2]
-                    self.blocks[current_block] = []
+                    current_boundary = self.extract_boundary_name(line)
+                    self.boundaries[current_boundary] = []
                 elif line.startswith('#end'):
-                    current_block = None
-                elif current_block:
-                    self.blocks[current_block].append(line.strip())
-                elif line and not line.startswith('!') and '=' in line:
-                    key, value = line.split('=', 1)
-                    self.parameters[key.strip()] = value.strip()
+                    current_boundary = None
+                elif line.startswith('#define volume monitor'):
+                    current_monitor = self.extract_monitor_name(line)
+                    self.monitors[current_monitor] = {}
+                elif current_boundary:
+                    self.process_boundary_line(current_boundary, line)
+                elif current_monitor:
+                    self.process_monitor_line(current_monitor, line)
+                elif '=' in line:
+                    self.process_parameter_line(line)
+
+    def extract_boundary_name(self, line):
+        return line.split(' ')[2]
+
+    def extract_monitor_name(self, line):
+        return line.split(' ')[3]
+
+    def process_boundary_line(self, current_boundary, line):
+        self.boundaries[current_boundary].append(line.strip())
+
+    def process_monitor_line(self, current_monitor, line):
+        if '=' in line:
+            key, value = line.split('=', 1)
+            self.monitors[current_monitor][key.strip()] = value.strip()
+
+    def process_parameter_line(self, line):
+        key, value = line.split('=', 1)
+        self.parameters[key.strip()] = value.strip()
 
     def saveControlFile(self, filepath):
         with open(filepath, 'w') as file:
-            for key, value in self.parameters.items():
-                file.write(f"{key} = {value}\n")
-            for block, lines in self.blocks.items():
-                file.write(f"#define boundary {block}\n")
-                for line in lines:
-                    file.write(f"  {line}\n")
-                file.write("#end\n")
+            self.write_parameters(file)
+            self.write_boundaries(file)
+            self.write_monitors(file)
+            # Write an empty line to preserve formatting
+            file.write("\n")
         return filepath
+
+    def write_parameters(self, file):
+        for key, value in self.parameters.items():
+            file.write(f"{key} = {value}\n")
+
+    def write_boundaries(self, file):
+        for boundary, lines in self.boundaries.items():
+            file.write(f"#define boundary {boundary}\n")
+            for line in lines:
+                file.write(f"  {line}\n")
+            file.write("#end\n")
+            file.write("\n")
+
+    def write_monitors(self, file):
+        for monitor, properties in self.monitors.items():
+            file.write(f"#define volume monitor {monitor}\n")
+            for key, value in properties.items():
+                file.write(f"  {key} = {value}\n")
+            file.write("#end\n")
+            file.write("\n")
 
     def createDefaultControl(self):
         self.parameters = {
@@ -69,3 +112,4 @@ class Horses3DControl:
 
     def get_parameter(self, key):
         return self.parameters.get(key, None)
+
