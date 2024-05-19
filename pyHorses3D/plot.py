@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 
 class Horses3DPlot:
 
@@ -94,6 +95,72 @@ class Horses3DPlot:
         plt.show()
         
         return
+
+    def plot2DStreamlines(self, mesh, field, plane='XY', value=0, cmap='jet'):
+        # Reshape mesh and extract coordinates
+        coord_x = mesh.reshape(-1, 3)[:, 0]
+        coord_y = mesh.reshape(-1, 3)[:, 1]
+        coord_z = mesh.reshape(-1, 3)[:, 2]
+
+        rhou_field = field[..., 1].reshape(-1)
+        rhov_field = field[..., 2].reshape(-1)
+        rhow_field = field[..., 3].reshape(-1)
+
+        if plane == 'XY':
+            closest_idx = np.abs(coord_z - value).argmin()
+            closest_value = coord_z[closest_idx]
+            idx = np.isclose(coord_z, closest_value)
+
+            x = coord_x[idx]
+            y = coord_y[idx]
+            u_slice = rhou_field[idx]
+            v_slice = rhov_field[idx]
+        elif plane == 'XZ':
+            closest_idx = np.abs(coord_y - value).argmin()
+            closest_value = coord_y[closest_idx]
+            idx = np.isclose(coord_y, closest_value)
+
+            x = coord_x[idx]
+            y = coord_z[idx]
+            u_slice = rhou_field[idx]
+            v_slice = rhow_field[idx]
+        elif plane == 'YZ':
+            closest_idx = np.abs(coord_x - value).argmin()
+            closest_value = coord_x[closest_idx]
+            idx = np.isclose(coord_x, closest_value)
+
+            x = coord_y[idx]
+            y = coord_z[idx]
+            u_slice = rhov_field[idx]
+            v_slice = rhow_field[idx]
+        else:
+            raise ValueError("Invalid plane. Please provide 'XY', 'XZ', or 'YZ'.")
+
+        # Create grid
+        xi = np.linspace(x.min(), x.max(), 100)
+        yi = np.linspace(y.min(), y.max(), 100)
+        X, Y = np.meshgrid(xi, yi)
+
+        # Interpolate velocity components onto regular grid
+        U = griddata((x, y), u_slice, (X, Y), method='cubic')
+        V = griddata((x, y), v_slice, (X, Y), method='cubic')
+
+        # Calculate the velocity magnitude for coloring
+        speed = np.sqrt(U**2 + V**2)
+
+        # Plot streamlines
+        plt.figure(figsize=(10, 7))
+        plt.streamplot(X, Y, U, V, color=speed, cmap=cmap)
+        plt.xlabel('X' if plane != 'YZ' else 'Y')
+        plt.ylabel('Y' if plane != 'XZ' else 'Z')
+        plt.title(f'Streamlines in {plane} plane at {"Z" if plane == "XY" else ("Y" if plane == "XZ" else "X")} = {value}')
+        plt.colorbar(label='Velocity magnitude')
+        plt.show()
+
+
+
+
+
 
 
 

@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import glob
 
 class Horses3DMesh:
     def __init__(self):
