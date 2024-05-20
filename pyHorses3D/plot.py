@@ -11,6 +11,14 @@ class Horses3DPlot:
     def _validate_key(self, key):
         if key not in self.magnitudes:
             raise ValueError(f"Invalid key. Please provide one of: {', '.join(self.magnitudes.keys())}.")
+        
+    def add_magnitude(self, key, label):
+        if key in self.magnitudes:
+            raise ValueError(f"The key '{key}' already exists in magnitudes.")
+        new_index = len(self.magnitudes)
+        self.magnitudes[key] = new_index
+        self.colorbar_labels[new_index] = label
+
 
     def _extract_coordinates(self, mesh):
         coords = mesh.reshape(-1, 3)

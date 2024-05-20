@@ -5,6 +5,7 @@ import numpy as np
 class Horses3DSolution:
     def __init__(self):
         self.solution = []
+        self.derivedFields = {}
     
     def loadAllSolutions(self, allSolutionFiles):
         for solutionFile in allSolutionFiles:
@@ -22,14 +23,8 @@ class Horses3DSolution:
     def loadSingleSolution(self, solutionFileName):
         self.solution.append(self._Q_from_file(solutionFileName).transpose(0,2,3,4,1))
 
-    def setEquations(self, equations='momentum'):
-        if equations == 'all':
-            return
-
-        if equations == 'momentum':
-            for i in range(len(self.solution)):
-                # Slice each solution array to keep only the momentum equations
-                self.solution[i] = self.solution[i][..., 2:5]
+    def add_computed_field(self, name, data):
+        self.computed_fields[name] = data
 
     def _Q_from_file(self, fname):
         v1 = np.fromfile(fname, dtype=np.int32, count=2, sep='', offset=136)
