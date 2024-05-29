@@ -14,7 +14,8 @@ class Horses3D:
         self.control = Horses3DControl(controlFilePath)
         self.plot = Horses3DPlot()
         self.mesh = Horses3DMesh()
-        self.solution = Horses3DSolution(self)
+        self.solution = Horses3DSolution()
+
         self.horses3dPath = solverPath
         self.solutionFileNames = []
         self.meshFileNames = []
