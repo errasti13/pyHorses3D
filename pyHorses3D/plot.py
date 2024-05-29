@@ -19,7 +19,6 @@ class Horses3DPlot:
         self.magnitudes[key] = new_index
         self.colorbar_labels[new_index] = label
 
-
     def _extract_coordinates(self, mesh):
         coords = mesh.reshape(-1, 3)
         return coords[:, 0], coords[:, 1], coords[:, 2]
@@ -68,7 +67,7 @@ class Horses3DPlot:
 
         plt.show()
 
-    def plot2DField(self, mesh, field, key, plane='XY', value=0, cmap='jet'):
+    def plot2DField(self, mesh, field, key, plane='XY', value=0, cmap='jet', isocontours=False, contour_levels=10):
         self._validate_key(key)
 
         coord_x, coord_y, coord_z = self._extract_coordinates(mesh)
@@ -96,6 +95,10 @@ class Horses3DPlot:
         plt.figure(figsize=(10, 7))
         heatmap = plt.imshow(Z, extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap=cmap, aspect='auto')
         plt.colorbar(heatmap)
+
+        if isocontours:
+            plt.contour(X, Y, Z, levels=contour_levels, colors='k')
+
         plt.xlabel('X' if plane != 'YZ' else 'Y')
         plt.ylabel('Y' if plane != 'XZ' else 'Z')
         plt.title(f'Heatmap in {plane} plane at {"Z" if plane == "XY" else ("Y" if plane == "XZ" else "X")} = {value}')
@@ -136,3 +139,51 @@ class Horses3DPlot:
         plt.title(f'Streamlines in {plane} plane at {"Z" if plane == "XY" else ("Y" if plane == "XZ" else "X")} = {value}')
         plt.colorbar(label='Velocity magnitude')
         plt.show()
+
+        return
+    
+    def plot3DIsoSurface(self, mesh, field, key, isovalue, cmap='jet'): 
+        self._validate_key(key)
+
+        # Extract coordinates and field values
+        x, y, z = self._extract_coordinates(mesh)
+        magnitude_index = self.magnitudes[key]
+        field_values = field[..., magnitude_index].reshape(-1)
+
+        # Create a smaller grid for interpolation to reduce memory usage
+        num_points = 50  # Adjust this number based on your memory constraints
+        xi = np.linspace(x.min(), x.max(), num_points)
+        yi = np.linspace(y.min(), y.max(), num_points)
+        zi = np.linspace(z.min(), z.max(), num_points)
+        X, Y, Z = np.meshgrid(xi, yi, zi)
+
+        # Interpolate field values onto the grid
+        field_interp = griddata((x, y, z), field_values, (X, Y, Z), method='linear')
+
+        # Create a 3D plot with isosurfaces
+        fig = plt.figure(figsize=(10, 7))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Plot the isosurface
+        try:
+            isosurface = ax.contour3D(X, Y, Z, field_interp, levels=[isovalue], cmap=cmap)
+        except Exception as e:
+            print(f"Error creating isosurface: {e}")
+            return
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.set_title(f'{self.colorbar_labels[magnitude_index]} Isosurface at Value {isovalue}')
+
+        # Create a colorbar
+        mappable = plt.cm.ScalarMappable(cmap=cmap)
+        mappable.set_array(field_interp)
+        cbar = fig.colorbar(mappable, ax=ax, shrink=0.6, aspect=10)
+        cbar.set_label(self.colorbar_labels[magnitude_index])
+
+        plt.show()
+
+
+        return
+

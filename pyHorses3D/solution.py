@@ -1,11 +1,17 @@
 # solution.py
 
+from .calculator import Horses3DCalculator
 import numpy as np
 
 class Horses3DSolution:
-    def __init__(self):
-        self.solution = []
-        self.derivedFields = {}
+    def __init__(self, parent):
+        self.magnitudes = {}
+        self.calculator = Calculator(self)
+        self.parent = parent
+
+    def add_magnitude(self, name, value):
+        self.magnitudes[name] = value
+        self.parent.plot.add_magnitude(name, f'{name} label')
     
     def loadAllSolutions(self, allSolutionFiles):
         for solutionFile in allSolutionFiles:
@@ -71,3 +77,6 @@ class Horses3DSolution:
 
     class storage():
         Q = []
+
+
+

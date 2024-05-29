@@ -4,10 +4,10 @@ import glob
 
 class Horses3DMesh:
     def __init__(self):
-        self.mesh = {}
+        self.mesh = []
 
     def loadMesh(self, filepath):
-        self.mesh = self._Q_from_file(filepath).transpose(0,2,3,4,1)
+        self.mesh.append(self._Q_from_file(filepath).transpose(0,2,3,4,1))
 
     def _Q_from_file(self, fname):
         v1 = np.fromfile(fname, dtype=np.int32, count=2, sep='', offset=136)
