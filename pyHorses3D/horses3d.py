@@ -19,26 +19,37 @@ class Horses3D:
         self.horses3dPath = solverPath
         self.solutionFileNames = []
         self.meshFileNames = []
-    
 
-    def runHorses3D(self):
-        config_file = self.control.saveControlFile('control_generated.control')
-        command = f"{self.horses3dPath} {config_file}"
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
+    def runHorses3D(self, plotResiduals=False):
         try:
+            config_file = self.control.saveControlFile('control_generated.control')
+            command = f"{self.horses3dPath} {config_file}"
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
             with process.stdout as stdout, process.stderr as stderr:
-                for line in iter(stdout.readline, ''):
+                for line in stdout:
                     sys.stdout.write(line)
-                for line in iter(stderr.readline, ''):
+                for line in stderr:
                     sys.stderr.write(line)
+
             process.wait()
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, command)
+
+            if plotResiduals:
+                self.plot_residuals()
         except subprocess.CalledProcessError as e:
             print(f"Error during simulation: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
+
+    def plot_residuals(self):
+        try:
+            residualsFileName = os.path.splitext(self.control.parameters["solution file name"])[0][1:] + '.residuals'
+            if os.path.exists(residualsFileName):
+                with open(residualsFileName, 'r') as file:
+                    residuals_data = file.readlines()
+                self.plot.plotResiduals(residuals_data)
+        except Exception as e:
+            print(f"Error plotting residuals: {e}")
 
     def getSolutionFileNames(self):
         solution_file_name = self.control.parameters["solution file name"]

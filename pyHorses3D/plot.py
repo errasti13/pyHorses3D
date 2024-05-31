@@ -183,7 +183,44 @@ class Horses3DPlot:
         cbar.set_label(self.colorbar_labels[magnitude_index])
 
         plt.show()
-
-
         return
 
+
+    def plotResiduals(self, residuals_data):
+        # Initialize lists to store data
+        iterations = []
+        times = []
+        continuity = []
+        x_momentum = []
+        y_momentum = []
+        z_momentum = []
+        energy = []
+
+        # Parse residuals data
+        for line in residuals_data:
+            if line.startswith('#'):  # Skip comment lines
+                continue
+            # Split the line into columns
+            columns = line.split()
+            # Extract data from columns
+            iterations.append(int(columns[0]))
+            times.append(float(columns[1]))
+            continuity.append(float(columns[4]))
+            x_momentum.append(float(columns[5]))
+            y_momentum.append(float(columns[6]))
+            z_momentum.append(float(columns[7]))
+            energy.append(float(columns[8]))
+
+        # Plot residuals
+        plt.figure(figsize=(12, 8))
+        plt.semilogy(iterations, continuity, label='Continuity')
+        plt.semilogy(iterations, x_momentum, label='X-Momentum')
+        plt.semilogy(iterations, y_momentum, label='Y-Momentum')
+        plt.semilogy(iterations, z_momentum, label='Z-Momentum')
+        plt.semilogy(iterations, energy, label='Energy')
+        plt.xlabel('Iterations')
+        plt.ylabel('Residuals')
+        plt.title('Residuals over Iterations')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
