@@ -40,6 +40,10 @@ class Horses3D:
             print(f"Error during simulation: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
+        finally:
+            control_file_path = os.path.join(os.getcwd(), 'control_generated.control')
+            if os.path.exists(control_file_path):
+                os.remove(control_file_path)
 
     def plot_residuals(self):
         try:

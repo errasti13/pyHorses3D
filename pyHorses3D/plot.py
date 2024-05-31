@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+import re
 
 class Horses3DPlot:
 
@@ -187,40 +188,61 @@ class Horses3DPlot:
 
 
     def plotResiduals(self, residuals_data):
-        # Initialize lists to store data
-        iterations = []
-        times = []
-        continuity = []
-        x_momentum = []
-        y_momentum = []
-        z_momentum = []
-        energy = []
+        # Initialize dictionaries to store data
+        data = {}
+        headers = None
 
         # Parse residuals data
         for line in residuals_data:
             if line.startswith('#'):  # Skip comment lines
+                headers = re.split(r'\s{2,}', line[1:].strip())
                 continue
-            # Split the line into columns
-            columns = line.split()
-            # Extract data from columns
-            iterations.append(int(columns[0]))
-            times.append(float(columns[1]))
-            continuity.append(float(columns[4]))
-            x_momentum.append(float(columns[5]))
-            y_momentum.append(float(columns[6]))
-            z_momentum.append(float(columns[7]))
-            energy.append(float(columns[8]))
+
+            # Split the line into columns using multiple spaces as the separator
+            columns = line.strip().split()
+
+            # If headers are not yet parsed, parse them
+            if headers and not data:
+                for header in headers:
+                    data[header] = []
+            else:
+                # Store data corresponding to each header
+                for header, value in zip(headers, columns):
+                    if value.strip():  # Check if value is not empty after stripping whitespace
+                        data[header].append(float(value.strip()))
 
         # Plot residuals
-        plt.figure(figsize=(12, 8))
-        plt.semilogy(iterations, continuity, label='Continuity')
-        plt.semilogy(iterations, x_momentum, label='X-Momentum')
-        plt.semilogy(iterations, y_momentum, label='Y-Momentum')
-        plt.semilogy(iterations, z_momentum, label='Z-Momentum')
-        plt.semilogy(iterations, energy, label='Energy')
-        plt.xlabel('Iterations')
-        plt.ylabel('Residuals')
-        plt.title('Residuals over Iterations')
-        plt.legend()
-        plt.grid(True)
+        plt.figure(figsize=(8, 6))
+
+        if 'Time' in data:
+            x_data = data['Time']
+            xlabel = 'Time'
+        else:
+            x_data = data['Iteration']
+            xlabel = 'Iterations'
+
+        # Customize plot styles
+        colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+        markers = ['o', 's', '^', 'x', 'D', 'v', '>', '<', 'P', 'h']
+        linestyles = ['-', '--', '-.', ':']
+
+        for i, header in enumerate(headers[4:]):
+            plt.semilogy(x_data, data[header], label=header, color=colors[i % len(colors)], marker=markers[i % len(markers)], linestyle=linestyles[i % len(linestyles)], linewidth=1.5)
+
+        # Set axis labels and title
+        plt.xlabel(xlabel, fontsize=12)
+        plt.ylabel('Residuals', fontsize=12)
+        plt.title('Residuals over {}'.format(xlabel), fontsize=14)
+
+        # Set legend
+        plt.legend(fontsize=10)
+
+        # Set grid
+        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+        # Adjust tick parameters
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+
+        plt.tight_layout()
         plt.show()
