@@ -1,4 +1,4 @@
-# Horses3D
+# pyHorses3D
 
 ## Overview
 
