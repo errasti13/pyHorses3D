@@ -12,12 +12,11 @@ class Horses3DPlot:
         if key not in self.magnitudes:
             raise ValueError(f"Invalid key. Please provide one of: {', '.join(self.magnitudes.keys())}.")
         
-    def add_magnitude(self, key, label):
-        if key in self.magnitudes:
-            raise ValueError(f"The key '{key}' already exists in magnitudes.")
-        new_index = len(self.magnitudes)
-        self.magnitudes[key] = new_index
-        self.colorbar_labels[new_index] = label
+    def modifyMagnitudes(self, magnitudes):
+        self.magnitudes = magnitudes
+        for key, index in magnitudes.items():
+            if index not in self.colorbar_labels:
+                self.colorbar_labels[index] = f'{key}'
 
     def _extract_coordinates(self, mesh):
         coords = mesh.reshape(-1, 3)
@@ -94,8 +93,9 @@ class Horses3DPlot:
 
         plt.figure(figsize=(10, 7))
         heatmap = plt.imshow(Z, extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap=cmap, aspect='auto')
-        plt.colorbar(heatmap)
-
+        cbar = plt.colorbar(heatmap)
+        cbar.ax.set_ylabel(self.colorbar_labels[self.magnitudes[key]])
+        
         if isocontours:
             plt.contour(X, Y, Z, levels=contour_levels, colors='k')
 
