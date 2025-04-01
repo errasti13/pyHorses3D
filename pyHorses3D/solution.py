@@ -116,7 +116,7 @@ class Horses3DSolution:
             offset_value = offset_value + 4*4   
             size = P_order[0]*P_order[1]*P_order[2]*P_order[3]
             
-            Q = np.fromfile(fname, dtype=np.float64, count=size , sep='', offset=offset_value).reshape(P_order,order='F')
+            Q = np.fromfile(fname, dtype=np.float32, count=size , sep='', offset=offset_value).reshape(P_order,order='F')
             
             Q1 = np.zeros( (Q.shape[0], Q.shape[1], Q.shape[2], Q.shape[3] )   )
             size1 = P_order[0]*P_order[1]*P_order[2]*P_order[3] 
